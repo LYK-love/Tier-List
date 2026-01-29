@@ -3,13 +3,17 @@ const itemInput = document.getElementById("item-input");
 const addItemBtn = document.getElementById("add-item");
 const tierInput = document.getElementById("tier-input");
 const addTierBtn = document.getElementById("add-tier");
-const clearAllBtn = document.getElementById("clear-all");
+const resetAllBtn = document.getElementById("reset-all");
 const exportBtn = document.getElementById("export");
+const boardRows = document.getElementById("board-rows");
+const boardTitle = document.getElementById("board-title");
 
 const STORAGE_KEY = "hot-tier-maker-v1";
+const DEFAULT_TITLE = "从夯到拉 排名表";
 
 let dragItem = null;
-const DEFAULT_TIERS = ["夯", "顶级", "人上人", "NPC", "拉完了"];
+let dragTier = null;
+const DEFAULT_TIERS = ["夯", "S级", "人上人", "NPC", "拉完了"];
 
 function hashString(text) {
   let hash = 0;
@@ -87,6 +91,7 @@ function makeCard(label) {
 
 function setupDropZone(zone) {
   zone.addEventListener("dragover", (event) => {
+    if (dragTier) return;
     event.preventDefault();
     zone.classList.add("drop-hover");
   });
@@ -96,6 +101,7 @@ function setupDropZone(zone) {
   });
 
   zone.addEventListener("drop", (event) => {
+    if (dragTier) return;
     event.preventDefault();
     zone.classList.remove("drop-hover");
     if (dragItem) {
@@ -117,6 +123,7 @@ function createTier(name) {
   const tier = document.createElement("div");
   tier.className = "tier";
   tier.dataset.tier = name;
+  tier.draggable = true;
 
   const label = document.createElement("div");
   label.className = "tier-label";
@@ -146,6 +153,17 @@ function createTier(name) {
 
   tier.appendChild(label);
   tier.appendChild(drop);
+  tier.addEventListener("dragstart", (event) => {
+    if (event.target !== tier) return;
+    dragTier = tier;
+    tier.classList.add("tier-dragging");
+    event.dataTransfer?.setData("text/plain", "tier");
+  });
+  tier.addEventListener("dragend", () => {
+    dragTier = null;
+    tier.classList.remove("tier-dragging");
+    saveState();
+  });
   setupDropZone(drop);
   applyTierColors(tier);
 
@@ -156,13 +174,13 @@ function addTier() {
   const name = tierInput.value.trim();
   if (!name) return;
 
-  const board = document.querySelector(".board");
-  board.appendChild(createTier(name));
+  boardRows.appendChild(createTier(name));
   tierInput.value = "";
   saveState();
 }
 
 function serialize() {
+  const title = boardTitle?.textContent?.trim() || DEFAULT_TITLE;
   const tiers = Array.from(document.querySelectorAll(".tier")).map((tier) => {
     const name = tier.dataset.tier || tier.querySelector(".tier-label")?.textContent || "";
     const items = Array.from(tier.querySelectorAll(".card")).map((card) => card.textContent);
@@ -170,21 +188,23 @@ function serialize() {
   });
 
   const poolItems = Array.from(pool.querySelectorAll(".card")).map((card) => card.textContent);
-  return { tiers, pool: poolItems };
+  return { title, tiers, pool: poolItems };
 }
 
 function restore(data) {
   if (!data || !Array.isArray(data.tiers)) return false;
   if (data.tiers.length === 0) return false;
 
-  const board = document.querySelector(".board");
-  board.innerHTML = "";
+  boardRows.innerHTML = "";
   pool.querySelectorAll(".card").forEach((card) => card.remove());
+  if (boardTitle) {
+    boardTitle.textContent = (data.title || DEFAULT_TITLE).trim();
+  }
 
   data.tiers.forEach((tierData) => {
     const tier = createTier(tierData.name);
     const drop = tier.querySelector(".tier-drop");
-    board.appendChild(tier);
+    boardRows.appendChild(tier);
 
     if (Array.isArray(tierData.items)) {
       tierData.items.forEach((item) => {
@@ -221,8 +241,7 @@ function loadState() {
 
 function ensureDefaults() {
   if (document.querySelectorAll(".tier").length === 0) {
-    const board = document.querySelector(".board");
-    DEFAULT_TIERS.forEach((name) => board.appendChild(createTier(name)));
+    DEFAULT_TIERS.forEach((name) => boardRows.appendChild(createTier(name)));
   }
 }
 
@@ -236,11 +255,31 @@ tierInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") addTier();
 });
 
-clearAllBtn.addEventListener("click", () => {
-  if (!confirm("清空所有对象？")) return;
-  document.querySelectorAll(".card").forEach((card) => card.remove());
-  saveState();
-});
+if (boardTitle) {
+  boardTitle.addEventListener("input", () => {
+    saveState();
+  });
+  boardTitle.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      boardTitle.blur();
+    }
+  });
+  boardTitle.addEventListener("blur", () => {
+    if (!boardTitle.textContent.trim()) {
+      boardTitle.textContent = DEFAULT_TITLE;
+      saveState();
+    }
+  });
+}
+
+if (resetAllBtn) {
+  resetAllBtn.addEventListener("click", () => {
+    if (!confirm("恢复默认档位与标题，并清空所有对象？")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+  });
+}
 
 exportBtn.addEventListener("click", async () => {
   if (typeof html2canvas === "undefined") {
@@ -248,19 +287,45 @@ exportBtn.addEventListener("click", async () => {
     return;
   }
 
-  const board = document.querySelector(".board");
+  const board = document.getElementById("board-canvas") || document.querySelector(".board");
   const canvas = await html2canvas(board, {
-    backgroundColor: null,
+    backgroundColor: "#ffffff",
     scale: window.devicePixelRatio || 2,
+    ignoreElements: (element) => element.classList?.contains("no-export"),
   });
 
   const link = document.createElement("a");
-  link.download = "从夯到拉-排名表.png";
+  const rawTitle = boardTitle?.textContent?.trim() || DEFAULT_TITLE;
+  const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80);
+  link.download = `${safeTitle || "从夯到拉-排名表"}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
 });
 
 setupDropZone(pool);
+
+if (boardRows) {
+  boardRows.addEventListener("dragover", (event) => {
+    if (!dragTier) return;
+    event.preventDefault();
+    const after = Array.from(boardRows.querySelectorAll(".tier:not(.tier-dragging)")).find((node) => {
+      const box = node.getBoundingClientRect();
+      return event.clientY < box.top + box.height / 2;
+    });
+    if (after) {
+      boardRows.insertBefore(dragTier, after);
+    } else {
+      boardRows.appendChild(dragTier);
+    }
+  });
+  boardRows.addEventListener("drop", (event) => {
+    if (!dragTier) return;
+    event.preventDefault();
+    dragTier.classList.remove("tier-dragging");
+    dragTier = null;
+    saveState();
+  });
+}
 
 if (!loadState()) {
   ensureDefaults();

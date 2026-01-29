@@ -20,7 +20,7 @@ body {
 }
 
 .hero {
-  padding: 40px 20px 24px;
+  padding: 6px 16px;
   background: linear-gradient(135deg, #f9d7b3, #f5b1a5);
   border-bottom: 3px solid #111;
 }
@@ -28,6 +28,10 @@ body {
 .hero-inner {
   max-width: 1100px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .tag {
@@ -40,44 +44,47 @@ body {
   letter-spacing: 1px;
 }
 
-h1 {
-  font-family: "ZCOOL KuaiLe", cursive;
-  font-size: clamp(30px, 4vw, 46px);
-  margin: 12px 0 6px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.sub {
-  margin: 0;
-  font-size: 16px;
+.brand-sub {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) 1fr;
-  gap: 20px;
-  padding: 24px;
-  max-width: 1200px;
+  grid-template-columns: 1fr minmax(260px, 320px);
+  gap: 14px;
+  padding: 10px 16px 14px;
+  max-width: 1300px;
   margin: 0 auto;
+  align-items: start;
 }
 
 .panel {
   background: var(--card);
   border: 2px solid #111;
   box-shadow: 6px 6px 0 var(--shadow);
-  padding: 18px;
+  padding: 12px;
   border-radius: 16px;
-  min-height: 520px;
+  position: sticky;
+  top: 10px;
 }
 
 .field-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 input {
   flex: 1;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 2px solid #111;
   border-radius: 10px;
   font-size: 14px;
@@ -88,7 +95,7 @@ button {
   border: 2px solid #111;
   background: #111;
   color: #fff;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
@@ -110,17 +117,17 @@ button.primary {
 .hint {
   font-size: 13px;
   line-height: 1.4;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .pool {
   border: 2px dashed #111;
   border-radius: 12px;
-  min-height: 220px;
-  padding: 12px;
+  min-height: 180px;
+  padding: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 10px;
+  gap: 8px;
   background: #fffefc;
 }
 
@@ -130,9 +137,52 @@ button.primary {
   margin-bottom: 6px;
 }
 
+.board-area {
+  display: grid;
+  gap: 8px;
+  background: #fff;
+  border: 2px solid #111;
+  border-radius: 18px;
+  padding: 10px;
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+
 .board {
   display: grid;
-  gap: 14px;
+  gap: 8px;
+}
+
+.board-title-section {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.board-title {
+  font-family: "ZCOOL KuaiLe", cursive;
+  font-size: clamp(20px, 2.8vw, 30px);
+  outline: none;
+  padding: 4px 6px;
+  border: 2px dashed transparent;
+  border-radius: 10px;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.board-title:focus {
+  border-color: #111;
+  background: #fff8ef;
+}
+
+.board-sub {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.board-rows {
+  display: grid;
+  gap: 8px;
 }
 
 .tier {
@@ -144,7 +194,7 @@ button.primary {
 }
 
 .tier-label {
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: var(--tier-accent, #111);
   color: #fff;
   font-weight: 700;
@@ -174,19 +224,24 @@ button.primary {
 }
 
 .tier-drop {
-  min-height: 72px;
-  padding: 8px;
+  min-height: 50px;
+  padding: 5px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
+  gap: 6px;
   background: var(--tier-bg, linear-gradient(135deg, #ffe9c7, #fff4de));
+}
+
+.tier-dragging {
+  opacity: 0.75;
+  transform: translateY(1px);
 }
 
 .card {
   background: #fff;
   border: 2px solid #111;
   border-radius: 10px;
-  padding: 8px;
+  padding: 6px;
   text-align: center;
   font-weight: 600;
   cursor: grab;
@@ -211,11 +266,24 @@ button.primary {
 
 .footer {
   max-width: 1200px;
-  margin: 0 auto 28px;
-  padding: 0 24px;
+  margin: 0 auto 16px;
+  padding: 0 16px;
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.author {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-left: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.author:hover {
+  opacity: 0.9;
 }
 
 @media (max-width: 900px) {
@@ -224,7 +292,7 @@ button.primary {
   }
 
   .panel {
-    min-height: unset;
+    position: static;
   }
 
   .footer {

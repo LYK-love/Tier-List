@@ -12,14 +12,25 @@
 <body>
   <header class="hero">
     <div class="hero-inner">
-      <p class="tag">从夯到拉 · Hot Tier Maker</p>
-      <h1>从夯到拉 排名表</h1>
-      <p class="sub">拖拽方块进档位，做出你自己的热度排序。</p>
+      <div class="brand">
+        <span class="tag">从夯到拉</span>
+        <span class="brand-sub">Hot Tier Maker</span>
+      </div>
     </div>
   </header>
 
   <main class="layout">
-    <section class="panel">
+    <section class="board-area" id="board-canvas" aria-label="从夯到拉排名表">
+      <div class="board-title-section">
+      <div id="board-title" class="board-title" contenteditable="true" spellcheck="false" aria-label="排名表标题">从夯到拉 排名表</div>
+      <p class="board-sub no-export">点击标题即可修改，拖拽对象完成你的排序。</p>
+    </div>
+      <section class="board" aria-label="排名表档位">
+        <div class="board-rows" id="board-rows"></div>
+      </section>
+    </section>
+
+    <aside class="panel">
       <h2>创建对象</h2>
       <div class="field-row">
         <input id="item-input" type="text" placeholder="输入对象名称，比如：歌/剧/人/梗" />
@@ -36,14 +47,13 @@
       <div class="pool" id="pool" aria-label="未排序对象">
         <div class="pool-title">待排序</div>
       </div>
-    </section>
-
-    <section class="board" aria-label="从夯到拉排名表"></section>
+    </aside>
   </main>
 
   <footer class="footer">
-    <button id="clear-all" class="ghost">清空全部</button>
+    <button id="reset-all" class="ghost">恢复默认</button>
     <button id="export" class="primary">导出图片</button>
+    <a class="author" href="mailto:lyk1037400635@gmail.com">by 陆昱宽 (Lu, Yukuan)</a>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
