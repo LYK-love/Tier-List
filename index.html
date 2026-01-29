@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>从夯到拉｜排名表生成器</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="tag">从夯到拉 · Hot Tier Maker</p>
+      <h1>从夯到拉 排名表</h1>
+      <p class="sub">拖拽方块进档位，做出你自己的热度排序。</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>创建对象</h2>
+      <div class="field-row">
+        <input id="item-input" type="text" placeholder="输入对象名称，比如：歌/剧/人/梗" />
+        <button id="add-item">添加</button>
+      </div>
+      <div class="field-row">
+        <input id="tier-input" type="text" placeholder="添加新档位，比如：神/夯/拉" />
+        <button id="add-tier">添加档位</button>
+      </div>
+      <div class="hint">
+        <span>提示：</span>拖拽方块到对应档位；双击方块可改名；右键删除。
+      </div>
+
+      <div class="pool" id="pool" aria-label="未排序对象">
+        <div class="pool-title">待排序</div>
+      </div>
+    </section>
+
+    <section class="board" aria-label="从夯到拉排名表"></section>
+  </main>
+
+  <footer class="footer">
+    <button id="clear-all" class="ghost">清空全部</button>
+    <button id="export" class="primary">导出图片</button>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
