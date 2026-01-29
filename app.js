@@ -7,13 +7,107 @@ const resetAllBtn = document.getElementById("reset-all");
 const exportBtn = document.getElementById("export");
 const boardRows = document.getElementById("board-rows");
 const boardTitle = document.getElementById("board-title");
+const langToggle = document.getElementById("lang-toggle");
 
 const STORAGE_KEY = "hot-tier-maker-v1";
+const LANG_KEY = "hot-tier-maker-lang";
 const DEFAULT_TITLE = "从夯到拉 排名表";
 
 let dragItem = null;
 let dragTier = null;
 const DEFAULT_TIERS = ["夯", "S级", "人上人", "NPC", "拉完了"];
+const DEFAULT_TITLES = {
+  zh: "从夯到拉 排名表",
+  en: "Hot-to-Not Tier List",
+};
+const I18N = {
+  zh: {
+    docTitle: "从夯到拉｜排名表生成器",
+    brandTag: "从夯到拉",
+    brandSub: "热度排名工具",
+    panelTitle: "创建对象",
+    itemPlaceholder: "输入对象名称，比如：歌/剧/人/梗",
+    addItem: "添加",
+    tierPlaceholder: "添加新档位，比如：神/夯/拉",
+    addTier: "添加档位",
+    hint: "提示：拖拽方块到对应档位；双击方块可改名；右键删除。",
+    poolTitle: "待排序",
+    boardSub: "点击标题即可修改，拖拽对象完成你的排序。",
+    reset: "恢复默认",
+    export: "导出图片",
+    promptRename: "修改名称",
+    confirmDeleteItem: "删除这个对象？",
+    confirmDeleteTier: (name) => `删除档位 “${name}” ？`,
+    confirmReset: "恢复默认档位与标题，并清空所有对象？",
+    exportFail: "导出功能加载失败，请检查网络或刷新页面。",
+    deleteTier: "删除",
+  },
+  en: {
+    docTitle: "Hot-to-Not Tier Maker",
+    brandTag: "Hot-to-Not",
+    brandSub: "Tier Maker",
+    panelTitle: "Add Items",
+    itemPlaceholder: "Add an item, e.g., song/show/person",
+    addItem: "Add",
+    tierPlaceholder: "Add a tier, e.g., S/A/B",
+    addTier: "Add Tier",
+    hint: "Tip: Drag cards into tiers; double-click to rename; right-click to delete.",
+    poolTitle: "Unranked",
+    boardSub: "Click the title to edit, then drag items into tiers.",
+    reset: "Reset to Default",
+    export: "Export Image",
+    promptRename: "Rename",
+    confirmDeleteItem: "Delete this item?",
+    confirmDeleteTier: (name) => `Delete tier "${name}"?`,
+    confirmReset: "Reset tiers/title and clear all items?",
+    exportFail: "Export failed. Check your connection and reload.",
+    deleteTier: "Delete",
+  },
+};
+let currentLang = "zh";
+let isReady = false;
+
+function getDefaultTitle() {
+  return DEFAULT_TITLES[currentLang] || DEFAULT_TITLE;
+}
+
+function applyTranslations(lang) {
+  const dict = I18N[lang] || I18N.zh;
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.title = dict.docTitle;
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (dict[key]) el.textContent = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (dict[key]) el.placeholder = dict[key];
+  });
+
+  document.querySelectorAll(".tier-delete").forEach((btn) => {
+    btn.textContent = dict.deleteTier;
+  });
+
+  if (langToggle) {
+    langToggle.textContent = lang === "zh" ? "EN" : "中文";
+  }
+
+  if (boardTitle) {
+    const current = boardTitle.textContent.trim();
+    const other = DEFAULT_TITLES[lang === "zh" ? "en" : "zh"];
+    if (!current || current === other) {
+      boardTitle.textContent = DEFAULT_TITLES[lang] || DEFAULT_TITLE;
+    }
+  }
+}
+
+function setLanguage(lang) {
+  currentLang = lang in I18N ? lang : "zh";
+  localStorage.setItem(LANG_KEY, currentLang);
+  applyTranslations(currentLang);
+  if (isReady) saveState();
+}
 
 function hashString(text) {
   let hash = 0;
@@ -70,7 +164,7 @@ function makeCard(label) {
   });
 
   card.addEventListener("dblclick", () => {
-    const name = prompt("修改名称", card.textContent);
+    const name = prompt(I18N[currentLang].promptRename, card.textContent);
     if (name && name.trim()) {
       card.textContent = name.trim();
       applyCardColor(card);
@@ -80,7 +174,7 @@ function makeCard(label) {
 
   card.addEventListener("contextmenu", (event) => {
     event.preventDefault();
-    if (confirm("删除这个对象？")) {
+    if (confirm(I18N[currentLang].confirmDeleteItem)) {
       card.remove();
       saveState();
     }
@@ -134,9 +228,9 @@ function createTier(name) {
   const del = document.createElement("button");
   del.type = "button";
   del.className = "tier-delete";
-  del.textContent = "删除";
+  del.textContent = I18N[currentLang].deleteTier;
   del.addEventListener("click", () => {
-    if (!confirm(`删除档位 “${name}” ？`)) return;
+    if (!confirm(I18N[currentLang].confirmDeleteTier(name))) return;
     const drop = tier.querySelector(".tier-drop");
     if (drop) {
       Array.from(drop.querySelectorAll(".card")).forEach((card) => pool.appendChild(card));
@@ -180,7 +274,7 @@ function addTier() {
 }
 
 function serialize() {
-  const title = boardTitle?.textContent?.trim() || DEFAULT_TITLE;
+  const title = boardTitle?.textContent?.trim() || getDefaultTitle();
   const tiers = Array.from(document.querySelectorAll(".tier")).map((tier) => {
     const name = tier.dataset.tier || tier.querySelector(".tier-label")?.textContent || "";
     const items = Array.from(tier.querySelectorAll(".card")).map((card) => card.textContent);
@@ -198,7 +292,7 @@ function restore(data) {
   boardRows.innerHTML = "";
   pool.querySelectorAll(".card").forEach((card) => card.remove());
   if (boardTitle) {
-    boardTitle.textContent = (data.title || DEFAULT_TITLE).trim();
+    boardTitle.textContent = (data.title || getDefaultTitle()).trim();
   }
 
   data.tiers.forEach((tierData) => {
@@ -275,7 +369,7 @@ if (boardTitle) {
 
 if (resetAllBtn) {
   resetAllBtn.addEventListener("click", () => {
-    if (!confirm("恢复默认档位与标题，并清空所有对象？")) return;
+    if (!confirm(I18N[currentLang].confirmReset)) return;
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
   });
@@ -283,7 +377,7 @@ if (resetAllBtn) {
 
 exportBtn.addEventListener("click", async () => {
   if (typeof html2canvas === "undefined") {
-    alert("导出功能加载失败，请检查网络或刷新页面。");
+    alert(I18N[currentLang].exportFail);
     return;
   }
 
@@ -295,14 +389,23 @@ exportBtn.addEventListener("click", async () => {
   });
 
   const link = document.createElement("a");
-  const rawTitle = boardTitle?.textContent?.trim() || DEFAULT_TITLE;
+  const rawTitle = boardTitle?.textContent?.trim() || getDefaultTitle();
   const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, "_").slice(0, 80);
-  link.download = `${safeTitle || "从夯到拉-排名表"}.png`;
+  link.download = `${safeTitle || getDefaultTitle()}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
 });
 
 setupDropZone(pool);
+
+if (langToggle) {
+  langToggle.addEventListener("click", () => {
+    setLanguage(currentLang === "zh" ? "en" : "zh");
+  });
+}
+
+const savedLang = localStorage.getItem(LANG_KEY);
+setLanguage(savedLang || "zh");
 
 if (boardRows) {
   boardRows.addEventListener("dragover", (event) => {
@@ -331,3 +434,4 @@ if (!loadState()) {
   ensureDefaults();
   saveState();
 }
+isReady = true;

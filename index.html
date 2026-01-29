@@ -13,9 +13,10 @@
   <header class="hero">
     <div class="hero-inner">
       <div class="brand">
-        <span class="tag">从夯到拉</span>
-        <span class="brand-sub">Hot Tier Maker</span>
+        <span class="tag" data-i18n="brandTag">从夯到拉</span>
+        <span class="brand-sub" data-i18n="brandSub">Hot Tier Maker</span>
       </div>
+      <button id="lang-toggle" class="ghost lang-toggle" type="button">EN</button>
     </div>
   </header>
 
@@ -23,7 +24,7 @@
     <section class="board-area" id="board-canvas" aria-label="从夯到拉排名表">
       <div class="board-title-section">
       <div id="board-title" class="board-title" contenteditable="true" spellcheck="false" aria-label="排名表标题">从夯到拉 排名表</div>
-      <p class="board-sub no-export">点击标题即可修改，拖拽对象完成你的排序。</p>
+      <p class="board-sub no-export" data-i18n="boardSub">点击标题即可修改，拖拽对象完成你的排序。</p>
     </div>
       <section class="board" aria-label="排名表档位">
         <div class="board-rows" id="board-rows"></div>
@@ -31,28 +32,28 @@
     </section>
 
     <aside class="panel">
-      <h2>创建对象</h2>
+      <h2 data-i18n="panelTitle">创建对象</h2>
       <div class="field-row">
-        <input id="item-input" type="text" placeholder="输入对象名称，比如：歌/剧/人/梗" />
-        <button id="add-item">添加</button>
+        <input id="item-input" type="text" placeholder="输入对象名称，比如：歌/剧/人/梗" data-i18n-placeholder="itemPlaceholder" />
+        <button id="add-item" data-i18n="addItem">添加</button>
       </div>
       <div class="field-row">
-        <input id="tier-input" type="text" placeholder="添加新档位，比如：神/夯/拉" />
-        <button id="add-tier">添加档位</button>
+        <input id="tier-input" type="text" placeholder="添加新档位，比如：神/夯/拉" data-i18n-placeholder="tierPlaceholder" />
+        <button id="add-tier" data-i18n="addTier">添加档位</button>
       </div>
-      <div class="hint">
-        <span>提示：</span>拖拽方块到对应档位；双击方块可改名；右键删除。
+      <div class="hint" data-i18n="hint">
+        提示：拖拽方块到对应档位；双击方块可改名；右键删除。
       </div>
 
       <div class="pool" id="pool" aria-label="未排序对象">
-        <div class="pool-title">待排序</div>
+        <div class="pool-title" data-i18n="poolTitle">待排序</div>
       </div>
     </aside>
   </main>
 
   <footer class="footer">
-    <button id="reset-all" class="ghost">恢复默认</button>
-    <button id="export" class="primary">导出图片</button>
+    <button id="reset-all" class="ghost" data-i18n="reset">恢复默认</button>
+    <button id="export" class="primary" data-i18n="export">导出图片</button>
     <a class="author" href="mailto:lyk1037400635@gmail.com">by 陆昱宽 (Lu, Yukuan)</a>
   </footer>
 
