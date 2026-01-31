@@ -23,3 +23,7 @@ Hosted on **Netlify** and accelerated by **Cloudflare CDN**.
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ba7914ea-772c-4259-899c-472050ba3e84/deploy-status)](https://app.netlify.com/sites/rank-anything/deploys)
 
 > Note: The project is generated with Codex (AI)
+
+## License
+
+MIT License. See [LICENSE](LICENSE).

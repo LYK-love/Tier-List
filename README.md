@@ -23,3 +23,6 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/ba7914ea-772c-4259-899c-472050ba3e84/deploy-status)](https://app.netlify.com/sites/rank-anything/deploys)
 
 > 注意：本项目由Codex（AI）生成。
+## 许可证
+
+MIT License，详见 [LICENSE](LICENSE)。

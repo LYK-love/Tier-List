@@ -15,6 +15,8 @@ const DEFAULT_TITLE = "从夯到拉 排名表";
 
 let dragItem = null;
 let dragTier = null;
+let touchDrag = null;
+const TOUCH_DRAG_THRESHOLD = 6;
 const DEFAULT_TIERS = ["夯", "S级", "人上人", "NPC", "拉完了"];
 const DEFAULT_TITLES = {
   zh: "从夯到拉 排名表",
@@ -180,6 +182,8 @@ function makeCard(label) {
     }
   });
 
+  setupTouchCardDrag(card);
+
   return card;
 }
 
@@ -247,6 +251,7 @@ function createTier(name) {
 
   tier.appendChild(label);
   tier.appendChild(drop);
+  setupTouchTierDrag(tier, label);
   tier.addEventListener("dragstart", (event) => {
     if (event.target !== tier) return;
     dragTier = tier;
@@ -397,6 +402,171 @@ exportBtn.addEventListener("click", async () => {
 });
 
 setupDropZone(pool);
+
+function isTouchPointer(event) {
+  return event.pointerType === "touch" || event.pointerType === "pen";
+}
+
+function clearTouchDrag() {
+  if (!touchDrag) return;
+  if (touchDrag.ghost) touchDrag.ghost.remove();
+  if (touchDrag.lastDrop) touchDrag.lastDrop.classList.remove("drop-hover");
+  document.body.classList.remove("touch-dragging");
+  touchDrag = null;
+}
+
+function setupTouchCardDrag(card) {
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+
+  card.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!isTouchPointer(event)) return;
+      if (event.button && event.button !== 0) return;
+      if (dragTier) return;
+
+      startX = event.clientX;
+      startY = event.clientY;
+      dragging = false;
+
+      const onMove = (moveEvent) => {
+        if (moveEvent.pointerId !== event.pointerId) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!dragging && Math.hypot(dx, dy) < TOUCH_DRAG_THRESHOLD) return;
+
+        if (!dragging) {
+          dragging = true;
+          dragItem = card;
+          card.classList.add("dragging");
+          document.body.classList.add("touch-dragging");
+
+          const rect = card.getBoundingClientRect();
+          const ghost = card.cloneNode(true);
+          ghost.classList.add("drag-ghost");
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          document.body.appendChild(ghost);
+
+          touchDrag = {
+            type: "card",
+            ghost,
+            offsetX: startX - rect.left,
+            offsetY: startY - rect.top,
+            lastDrop: null,
+          };
+        }
+
+        if (!touchDrag) return;
+        moveEvent.preventDefault();
+        const x = moveEvent.clientX - touchDrag.offsetX;
+        const y = moveEvent.clientY - touchDrag.offsetY;
+        touchDrag.ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+        const hovered = document
+          .elementFromPoint(moveEvent.clientX, moveEvent.clientY)
+          ?.closest(".tier-drop, #pool");
+        if (touchDrag.lastDrop && touchDrag.lastDrop !== hovered) {
+          touchDrag.lastDrop.classList.remove("drop-hover");
+        }
+        if (hovered) hovered.classList.add("drop-hover");
+        touchDrag.lastDrop = hovered || null;
+      };
+
+      const onEnd = (endEvent) => {
+        if (endEvent.pointerId !== event.pointerId) return;
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onEnd);
+        window.removeEventListener("pointercancel", onEnd);
+
+        if (dragging && touchDrag) {
+          if (touchDrag.lastDrop) {
+            touchDrag.lastDrop.appendChild(card);
+            saveState();
+          }
+          card.classList.remove("dragging");
+          dragItem = null;
+          clearTouchDrag();
+        }
+      };
+
+      window.addEventListener("pointermove", onMove, { passive: false });
+      window.addEventListener("pointerup", onEnd, { passive: false });
+      window.addEventListener("pointercancel", onEnd, { passive: false });
+    },
+    { passive: true }
+  );
+}
+
+function setupTouchTierDrag(tier, handle) {
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+
+  handle.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!isTouchPointer(event)) return;
+      if (event.button && event.button !== 0) return;
+      if (event.target.closest(".tier-delete")) return;
+      if (dragItem) return;
+
+      startX = event.clientX;
+      startY = event.clientY;
+      dragging = false;
+
+      const onMove = (moveEvent) => {
+        if (moveEvent.pointerId !== event.pointerId) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (!dragging && Math.hypot(dx, dy) < TOUCH_DRAG_THRESHOLD) return;
+
+        if (!dragging) {
+          dragging = true;
+          dragTier = tier;
+          tier.classList.add("tier-dragging");
+          document.body.classList.add("touch-dragging");
+        }
+
+        if (!dragTier) return;
+        moveEvent.preventDefault();
+
+        const after = Array.from(boardRows.querySelectorAll(".tier:not(.tier-dragging)")).find(
+          (node) => {
+            const box = node.getBoundingClientRect();
+            return moveEvent.clientY < box.top + box.height / 2;
+          }
+        );
+        if (after) {
+          boardRows.insertBefore(dragTier, after);
+        } else {
+          boardRows.appendChild(dragTier);
+        }
+      };
+
+      const onEnd = (endEvent) => {
+        if (endEvent.pointerId !== event.pointerId) return;
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onEnd);
+        window.removeEventListener("pointercancel", onEnd);
+
+        if (dragging) {
+          tier.classList.remove("tier-dragging");
+          dragTier = null;
+          saveState();
+          document.body.classList.remove("touch-dragging");
+        }
+      };
+
+      window.addEventListener("pointermove", onMove, { passive: false });
+      window.addEventListener("pointerup", onEnd, { passive: false });
+      window.addEventListener("pointercancel", onEnd, { passive: false });
+    },
+    { passive: true }
+  );
+}
 
 if (langToggle) {
   langToggle.addEventListener("click", () => {

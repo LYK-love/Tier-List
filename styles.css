@@ -208,6 +208,7 @@ button.primary {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  touch-action: none;
 }
 
 .tier-label span {
@@ -252,6 +253,7 @@ button.primary {
   font-weight: 600;
   cursor: grab;
   user-select: none;
+  touch-action: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -263,6 +265,21 @@ button.primary {
   opacity: 0.6;
   transform: rotate(-2deg) scale(1.02);
   box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.9;
+  transform: translate3d(0, 0, 0);
+}
+
+body.touch-dragging .card,
+body.touch-dragging .tier-label {
+  touch-action: none;
 }
 
 .drop-hover {
